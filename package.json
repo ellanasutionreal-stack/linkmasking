@@ -1,0 +1,10 @@
+{
+  "name": "linkmasking-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Generator link masking untuk affiliate (Shopee) - upload thumbnail, share ke FB, redirect ke link asli.",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "sharp": "^0.33.4"
+  }
+}
