@@ -14,9 +14,10 @@ export default async (req, context) => {
 
   const origin = new URL(req.url).origin;
   const imageUrl = `${origin}/img/${data.slug}`;
-  const embedUrl = `${origin}/embed/${data.slug}`;
-  const pageUrl = `${origin}/tools-linkmasking/${data.slug}`;
 
+  // Bots (Facebook, WhatsApp, Twitter, dll) hanya baca meta tag, gak jalanin JS.
+  // Kalau ketauan bot, JANGAN kasih redirect apapun (no meta-refresh, no script)
+  // supaya bot cuma nampilin og:image kita, bukan lanjut ke target link.
   const userAgent = req.headers.get("user-agent") || "";
   const isCrawler = /facebookexternalhit|facebot|whatsapp|twitterbot|linkedinbot|telegrambot|slackbot|discordbot|pinterest|google.*snippet/i.test(
     userAgent
@@ -36,17 +37,9 @@ export default async (req, context) => {
 <meta property="og:image" content="${escapeAttr(imageUrl)}" />
 <meta property="og:image:width" content="1080" />
 <meta property="og:image:height" content="1080" />
-<meta property="og:video" content="${escapeAttr(embedUrl)}" />
-<meta property="og:video:secure_url" content="${escapeAttr(embedUrl)}" />
-<meta property="og:video:type" content="text/html" />
-<meta property="og:video:width" content="1080" />
-<meta property="og:video:height" content="1080" />
-<meta property="og:type" content="video.other" />
-<meta property="og:url" content="${escapeAttr(pageUrl)}" />
-<meta name="twitter:card" content="player" />
-<meta name="twitter:player" content="${escapeAttr(embedUrl)}" />
-<meta name="twitter:player:width" content="1080" />
-<meta name="twitter:player:height" content="1080" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="${escapeAttr(data.targetLink)}" />
+<meta name="twitter:card" content="summary_large_image" />
 <title>Mengalihkan...</title>
 </head>
 <body style="font-family:sans-serif;text-align:center;padding-top:40px;">
