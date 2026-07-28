@@ -1,99 +1,81 @@
-import { getStore } from "@netlify/blobs";
-import sharp from "sharp";
-
-export default async (req) => {
-  if (req.method !== "POST") {
-    return json({ error: "Method not allowed" }, 405);
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Generator Link Masking</title>
+<style>
+  :root {
+    --orange: #f0592a;
+    --orange-dark: #d94a1f;
+    --border: #e3e3e3;
+    --text: #2b2b2b;
+    --muted: #8a8a8a;
+    --bg-success: #eef7ee;
+    --success-border: #bfe3bf;
   }
-
-  let formData;
-  try {
-    formData = await req.formData();
-  } catch {
-    return json({ error: "Format form tidak valid" }, 400);
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 24px 12px;
+    color: var(--text);
   }
-
-  const password = (formData.get("password") || "").toString();
-  const adminPassword = Netlify.env.get("ADMIN_PASSWORD");
-
-  if (!adminPassword) {
-    return json(
-      { error: "ADMIN_PASSWORD belum di-set di Netlify environment variables" },
-      500
-    );
+  .card {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
   }
-
-  if (password !== adminPassword) {
-    return json({ error: "Password salah" }, 401);
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
   }
-
-  const targetLink = (formData.get("targetLink") || "").toString().trim();
-  const rawSlug = (formData.get("slug") || "").toString().trim();
-  const imageFile = formData.get("image");
-
-  if (!targetLink || !rawSlug || !imageFile || typeof imageFile === "string") {
-    return json({ error: "Link, slug, dan gambar wajib diisi" }, 400);
+  h1 { font-size: 20px; margin: 0; }
+  .btn-logout {
+    background: #e53935;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
   }
-
-  if (!/^https?:\/\//i.test(targetLink)) {
-    return json({ error: "Target link harus diawali http:// atau https://" }, 400);
+  .login-row { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .success-box {
+    background: var(--bg-success);
+    border: 1px solid var(--success-border);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 20px;
+    display: none;
   }
-
-  const slug = rawSlug
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  if (!slug) {
-    return json({ error: "Slug tidak valid, gunakan huruf/angka/tanda strip" }, 400);
+  .success-box.show { display: block; }
+  .success-box p:first-child { font-weight: 600; margin: 0 0 8px; }
+  .link-row {
+    display: flex;
+    gap: 6px;
   }
-
-  if (imageFile.size > 2 * 1024 * 1024) {
-    return json({ error: "Gambar maksimal 2MB" }, 400);
+  .link-row input {
+    flex: 1;
+    font-size: 13px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: #fafffa;
   }
-
-  const linksStore = getStore("links");
-  const imagesStore = getStore("images");
-
-  const existing = await linksStore.get(slug);
-  if (existing) {
-    return json({ error: `Slug "${slug}" sudah dipakai, coba slug lain` }, 409);
+  .link-row button {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 4px;
+    padding: 0 12px;
+    cursor: pointer;
+    font-size: 13px;
   }
-
-  const originalBuffer = Buffer.from(await imageFile.arrayBuffer());
-
-  let processedBuffer;
-  try {
-    processedBuffer = await sharp(originalBuffer)
-      .resize(1080, 1080, { fit: "cover", position: "attention" })
-      .jpeg({ quality: 85 })
-      .toBuffer();
-  } catch (err) {
-    return json({ error: "Gagal memproses gambar, coba file gambar lain" }, 400);
-  }
-
-  const contentType = "image/jpeg";
-
-  await imagesStore.set(slug, processedBuffer, { metadata: { contentType } });
-
-  await linksStore.setJSON(slug, {
-    targetLink,
-    slug,
-    contentType,
-    createdAt: new Date().toISOString(),
-  });
-
-  const origin = new URL(req.url).origin;
-  const generatedLink = `${origin}/tools-linkmasking/${slug}`;
-
-  return json({ success: true, link: generatedLink, slug });
-};
-
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
+  label { display: block; font-weight:
