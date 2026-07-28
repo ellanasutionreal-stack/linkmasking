@@ -78,4 +78,206 @@
     cursor: pointer;
     font-size: 13px;
   }
-  label { display: block; font-weight:
+  label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 6px; margin-top: 16px; }
+  input[type="text"], input[type="url"], input[type="password"] {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .file-row {
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 10px;
+  }
+  .submit-btn {
+    width: 100%;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    margin-top: 22px;
+    cursor: pointer;
+  }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .submit-btn:hover:not(:disabled) { background: var(--orange-dark); }
+  .error-box {
+    background: #fdecea;
+    border: 1px solid #f5c2c0;
+    color: #a12622;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-top: 14px;
+    display: none;
+  }
+  .error-box.show { display: block; }
+  #loginScreen { max-width: 340px; margin: 60px auto 0; }
+  #loginScreen input { margin-bottom: 12px; }
+  #loginScreen button {
+    width: 100%;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 11px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .preview {
+    margin-top: 10px;
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="card">
+  <h1 style="margin-bottom:16px;">Login</h1>
+  <input type="text" id="loginEmail" placeholder="Email (bebas, hanya label)" />
+  <input type="password" id="loginPassword" placeholder="Password" />
+  <button id="loginBtn">Masuk</button>
+  <div class="error-box" id="loginError"></div>
+</div>
+
+<div class="card" id="appScreen" style="display:none;">
+  <div class="card-header">
+    <h1>Generator Link Masking</h1>
+    <button class="btn-logout" id="logoutBtn">Logout</button>
+  </div>
+  <div class="login-row">Login sebagai: <span id="loginLabel"></span></div>
+  <hr />
+
+  <div class="success-box" id="successBox">
+    <p>Berhasil Dibuat!</p>
+    <p style="font-size:13px;margin:0 0 6px;">Link untuk di-share ke FB (Copy link di bawah ini):</p>
+    <div class="link-row">
+      <input type="text" id="resultLink" readonly />
+      <button id="copyBtn">Copy</button>
+    </div>
+  </div>
+
+  <form id="linkForm">
+    <label>1. Target Link Shopee Affiliate</label>
+    <input type="url" id="targetLink" placeholder="https://shope.ee/..." required />
+
+    <label>2. Nama Slug (Untuk URL Facebook)</label>
+    <input type="text" id="slug" placeholder="berita-viral-hari-ini" required />
+    <div class="hint">Tanpa spasi, gunakan tanda strip (-).</div>
+
+    <label>3. Upload Gambar Thumbnail (Maks 2MB)</label>
+    <div class="file-row">
+      <input type="file" id="image" accept="image/*" required />
+    </div>
+    <img class="preview" id="preview" />
+    <div class="hint">Gunakan gambar/kolase berbentuk kotak agar tidak terpotong di Facebook.</div>
+
+    <button type="submit" class="submit-btn" id="submitBtn">Buat Link Sekarang</button>
+    <div class="error-box" id="formError"></div>
+  </form>
+</div>
+
+<script>
+  const loginScreen = document.getElementById('loginScreen');
+  const appScreen = document.getElementById('appScreen');
+  const loginLabel = document.getElementById('loginLabel');
+
+  function showApp(email) {
+    loginScreen.style.display = 'none';
+    appScreen.style.display = 'block';
+    loginLabel.textContent = email || 'admin';
+  }
+
+  const savedPassword = sessionStorage.getItem('lm_password');
+  const savedEmail = sessionStorage.getItem('lm_email');
+  if (savedPassword) showApp(savedEmail);
+
+  document.getElementById('loginBtn').addEventListener('click', () => {
+    const email = document.getElementById('loginEmail').value.trim() || 'admin';
+    const password = document.getElementById('loginPassword').value;
+    if (!password) {
+      const err = document.getElementById('loginError');
+      err.textContent = 'Password wajib diisi';
+      err.classList.add('show');
+      return;
+    }
+    sessionStorage.setItem('lm_password', password);
+    sessionStorage.setItem('lm_email', email);
+    showApp(email);
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.clear();
+    location.reload();
+  });
+
+  document.getElementById('image').addEventListener('change', (e) => {
+    const preview = document.getElementById('preview');
+    const file = e.target.files[0];
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    } else {
+      preview.style.display = 'none';
+    }
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const input = document.getElementById('resultLink');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+  });
+
+  document.getElementById('linkForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    const errorBox = document.getElementById('formError');
+    errorBox.classList.remove('show');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Memproses...';
+
+    const fd = new FormData();
+    fd.append('password', sessionStorage.getItem('lm_password') || '');
+    fd.append('targetLink', document.getElementById('targetLink').value.trim());
+    fd.append('slug', document.getElementById('slug').value.trim());
+    fd.append('image', document.getElementById('image').files[0]);
+
+    try {
+      const res = await fetch('/.netlify/functions/create-link', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          sessionStorage.clear();
+          location.reload();
+          return;
+        }
+        errorBox.textContent = data.error || 'Terjadi kesalahan';
+        errorBox.classList.add('show');
+      } else {
+        document.getElementById('resultLink').value = data.link;
+        document.getElementById('successBox').classList.add('show');
+        document.getElementById('linkForm').reset();
+        document.getElementById('preview').style.display = 'none';
+      }
+    } catch (err) {
+      errorBox.textContent = 'Gagal terhubung ke server. Coba lagi.';
+      errorBox.classList.add('show');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Buat Link Sekarang';
+    }
+  });
+</script>
+
+</body>
+</html>
