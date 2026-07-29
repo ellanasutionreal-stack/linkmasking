@@ -34,7 +34,7 @@ Netlify otomatis `npm install` pas build karena ada `package.json` (isinya cuma 
 Klik deploy. Setelah selesai, buka `https://nama-site-kamu.netlify.app` — itu halaman admin/generator-nya.
 
 ## Custom Domain
-Kalau mau pakai domain sendiri (misal `seciko.co.id`), tinggal set di **Domain settings** Netlify seperti biasa, nanti link masking-nya jadi `https://seciko.co.id/tools-linkmasking/slug-kamu`.
+Kalau mau pakai domain sendiri (misal `lihatini.my.id`), tinggal set di **Domain settings** Netlify seperti biasa, nanti link masking-nya jadi `https://lihatini.my.id/tools-linkmasking/slug-kamu`.
 
 ## Struktur File
 
@@ -50,7 +50,7 @@ netlify/functions/
 
 ## Catatan / Batasan versi ini
 
-- **Resize gambar sudah otomatis** — apapun ukuran/rasio gambar yang diupload, server otomatis resize + center-crop jadi persis 1080x1080 (pakai library `sharp`) sebelum disimpan.
+- **Resize gambar sudah otomatis** — apapun ukuran/rasio gambar yang diupload, server otomatis resize + center-crop jadi persis 1080x1080 (pakai library `sharp`) sebelum disimpan. >>> part ini masih gagal karena tampilan nya jadi 1:1.9, dan ini bawaan OG di Facebook
 - **Video-card trick (eksperimental):** halaman masking sekarang juga ngirim tag `og:video` yang nunjuk ke halaman `/embed/:slug` (isinya gambar full-screen yang bisa diklik). Ini supaya Facebook render preview-nya pakai renderer video (rasio fleksibel/bisa kotak) alih-alih renderer gambar (yang dipaksa landscape 1.91:1). Ini niru cara kerja beberapa tool cloaking affiliate lain.
   - Kotak/gaknya hasil preview di FB **tergantung sepenuhnya sama Facebook**, bukan hal yang bisa kita jamin 100% — kalau Facebook ubah cara parsing-nya, ini bisa berhenti kerja kapan aja.
   - Klik gambar di dalam "video player" itu mencoba redirect via `target="_top"` (buka di tab utama) — tapi ini juga tergantung izin sandbox iframe dari Facebook, jadi ada kemungkinan kecil di device/browser tertentu klik-nya gak langsung nge-redirect. Selalu tes real di HP sebelum dipakai buat campaign beneran.
