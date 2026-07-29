@@ -14,6 +14,7 @@ export default async (req, context) => {
 
   const origin = new URL(req.url).origin;
   const imageUrl = `${origin}/img/${data.slug}`;
+  const pageUrl = `${origin}/tools-linkmasking/${data.slug}`;
 
   // Bots (Facebook, WhatsApp, Twitter, dll) hanya baca meta tag, gak jalanin JS.
   // Kalau ketauan bot, JANGAN kasih redirect apapun (no meta-refresh, no script)
@@ -37,8 +38,8 @@ export default async (req, context) => {
 <meta property="og:image" content="${escapeAttr(imageUrl)}" />
 <meta property="og:image:width" content="1080" />
 <meta property="og:image:height" content="1080" />
-<meta property="og:type" content="website" />
-<meta property="og:url" content="${escapeAttr(data.targetLink)}" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="${escapeAttr(pageUrl)}" />
 <meta name="twitter:card" content="summary_large_image" />
 <title>Mengalihkan...</title>
 </head>
